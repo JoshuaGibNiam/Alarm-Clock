@@ -138,10 +138,17 @@ class AlarmClock:
             pygame.mixer.music.play(-1)
             response = messagebox.askyesno("Alarm Clock Ringing", f"It's {self.alarmtime.get()}! \n"
                                                        f"Do you want to snooze?")
-            if response or not response:
+            if response:
                 pygame.mixer.music.stop()
-            self.root.after(60000, self.checkalarm)  #prevent alarm from ringing twice
-            return
+                self.min += 5
+                if self.min > 59:
+                    self.hour += 1
+                    self.min -= 60
+                self.setalarm()
+            if not response:
+                pygame.mixer.music.stop()
+                self.root.after(60000, self.checkalarm)  #prevent alarm from ringing twice
+                return
         self.root.after(1000, self.checkalarm)
 
     def updatetime(self):
