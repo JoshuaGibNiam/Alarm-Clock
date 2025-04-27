@@ -1,14 +1,16 @@
 import ttkbootstrap as ttk
 from tkinter import messagebox
 import datetime as dt
-import time
-import threading
+import pygame
 
 class AlarmClock:
     def __init__(self):
         self.root = ttk.Window(themename="darkly")
         self.root.title("Alarm Clock")
         self.root.geometry("500x500")
+
+        pygame.mixer.init()
+        pygame.mixer.music.load('clock-alarm-8761.mp3')
 
         self.hour = 7  #default values
         self.min = 0
@@ -28,7 +30,7 @@ class AlarmClock:
                                     anchor="center", relief="groove")
         self.alarmlabel.pack(side="top", fill="both", expand=True)
 
-
+        #---------------------------------------------------------------#
         self.hourentryframe = ttk.Frame(self.root, padding=20)
         self.hourentryframe.pack(side="top", fill="x")
 
@@ -47,6 +49,7 @@ class AlarmClock:
                                      command=self.sethour)
         self.sethourbtn.pack(side="left", fill="x", expand=True)
 
+        #---------------------------------------------------------#
         self.minentryframe = ttk.Frame(self.root, padding=20)
         self.minentryframe.pack(side="top", fill="both")
 
@@ -65,7 +68,21 @@ class AlarmClock:
                                      command=self.setmin)
         self.setminbtn.pack(side="left", fill="x", expand=True)
 
+        #--------------------------------------------------------------------#
+        self.timeframe = ttk.Frame(self.root, padding=20)
+        self.timeframe.pack(side="top", fill="x")
 
+        self.explanationlabel = ttk.Label(self.timeframe, style="Alarm.TLabel",
+                                          text="Current Time:")
+        self.explanationlabel.pack(side="left", fill="x", expand=True)
+
+        self.currenttime = ttk.StringVar()
+        self.currenttimelabel = ttk.Label(self.timeframe, style="Alarm.TLabel",
+                                          textvariable=self.currenttime)
+        self.currenttimelabel.pack(side="left", fill="x", expand=True)
+        self.updatetime()
+
+        self.checkalarm()
 
 
         self.root.mainloop()
@@ -112,6 +129,41 @@ class AlarmClock:
             self.alarmtime.set(f"{self.hour}:{self.min}")
 
         messagebox.showinfo(title="Alarm Set", message=f"Alarm has been set to {self.alarmtime.get()}.")
+
+
+    def checkalarm(self):
+        now = dt.datetime.now()
+        if now.hour == self.hour and now.minute == self.min:
+            print("alarm clokc linging!!!")
+            pygame.mixer.music.play(-1)
+            response = messagebox.askyesno("Alarm Clock Ringing", f"It's {self.alarmtime.get()}! \n"
+                                                       f"Do you want to snooze?")
+            if response or not response:
+                pygame.mixer.music.stop()
+            self.root.after(60000, self.checkalarm)  #prevent alarm from ringing twice
+            return
+        self.root.after(1000, self.checkalarm)
+
+    def updatetime(self):
+        now = dt.datetime.now()
+        if now.hour < 10 and now.minute < 10 and now.second < 10:  # Checking if all are single digits
+            self.currenttime.set(f"0{now.hour}:0{now.minute}:0{now.second}")
+        elif now.hour < 10 and now.minute < 10:
+            self.currenttime.set(f"0{now.hour}:0{now.minute}:{now.second}")
+        elif now.hour < 10 and now.second < 10:
+            self.currenttime.set(f"0{now.hour}:{now.minute}:0{now.second}")
+        elif now.minute < 10 and now.second < 10:
+            self.currenttime.set(f"{now.hour}:0{now.minute}:0{now.second}")
+        elif now.hour < 10:
+            self.currenttime.set(f"0{now.hour}:{now.minute}:{now.second}")
+        elif now.minute < 10:
+            self.currenttime.set(f"{now.hour}:0{now.minute}:{now.second}")
+        elif now.second < 10:
+            self.currenttime.set(f"{now.hour}:{now.minute}:0{now.second}")
+        else:
+            self.currenttime.set(f"{now.hour}:{now.minute}:{now.second}")
+
+        self.root.after(1000, self.updatetime)
 
 
 
